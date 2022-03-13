@@ -9,7 +9,7 @@
 const char *sysname = "shellfyre";
 
 /** Project 1 shellfyre by
-	Can Usluel (72754) and Halil Doruk Yıldırım 
+	Can Usluel (72754) and Halil Doruk Yıldırım (72298)
 **/
 
 

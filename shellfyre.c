@@ -6,8 +6,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <dirent.h>
 
 #define maxCommandSize 1024
+#define maxFolderCharSize 256
+#define maxSearchLength 128
 const char *sysname = "shellfyre";
 
 /** Project 1 shellfyre by
@@ -345,6 +348,62 @@ int main()
 	printf("\n");
 	return 0;
 }
+void executeFilesearch(struct command_t *command, char *starterDirectory, char *searchedString){
+	//Getting current directory
+	
+	DIR *currentDirectory;
+  	struct dirent *dir;
+  	//Creating a 2D array to store subfolders' names
+  	char subFolders[maxFolderCharSize][maxFolderCharSize];
+  	int i = 0;
+	
+ 	 currentDirectory = opendir(starterDirectory);
+ 	 
+	  if (currentDirectory) {
+	  //traversing current directory
+	    while ((dir = readdir(currentDirectory)) != NULL) {
+	    	//adding subfolders to the array if its not the previous folder(..), 
+	    	//the folder itself(.) or .git folder
+	    	if(dir->d_type == 4 && !(strstr(dir->d_name, "."))){
+	    	strcpy(subFolders[i], dir->d_name);
+	    	i++;
+	    	}
+	    	
+	    	//displaying the file if that file contains the given substring
+	    	if(strstr(dir->d_name, searchedString)){
+	    	printf("%s%s\n", starterDirectory, dir->d_name);
+	    	
+	    	//opening the file with the user's preferred application
+	    	if(command->args[1] != NULL){
+		    	if((strcmp(command->args[0], "-o") == 0 ||strcmp(command->args[1], "-o") == 0) &&
+		    	(dir->d_type == 8) && strstr(dir->d_name, ".")){
+		    		char openedFile[maxSearchLength];
+		    		strcpy(openedFile, "xdg-open ");
+		    		strcat(openedFile, starterDirectory);
+		    		strcat(openedFile, dir->d_name);
+		    		system(openedFile);
+		    		}
+	      		}
+	      	}
+	    }
+	    if(command->args[1] != NULL){
+		    if(strcmp(command->args[0], "-r") == 0 || strcmp(command->args[1], "-r") == 0){
+		    int j=0;
+		    while(j != i){
+			    //setting starter directory for recursive calls
+			    char bufferStarterDirectory[maxFolderCharSize];
+			    strcpy(bufferStarterDirectory, starterDirectory);
+			    strcat(bufferStarterDirectory, subFolders[j]);
+			    strcat(bufferStarterDirectory, "/");
+			    executeFilesearch(command, bufferStarterDirectory, searchedString);
+			    j++;
+		    	}
+		    }
+	    }
+	    closedir(currentDirectory);
+	  }
+	
+}
 
 int process_command(struct command_t *command)
 {
@@ -367,7 +426,17 @@ int process_command(struct command_t *command)
 	}
 
 	// TODO: Implement your custom commands here
-
+	if (strcmp(command->name, "filesearch") == 0){
+		int count = command->arg_count;
+		if(count > 0){
+			executeFilesearch(command, "./", command->args[count-1]);
+		}else{
+			printf("-%s: %s: Insufficient arguements\n", sysname, command->name);
+		}
+		return SUCCESS;
+		}
+	
+		
 	pid_t pid = fork();
 
 	if (pid == 0) // child

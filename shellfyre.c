@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+
+#define maxCommandSize 1024
 const char *sysname = "shellfyre";
 
 /** Project 1 shellfyre by
@@ -384,13 +386,39 @@ int process_command(struct command_t *command)
 		command->args[command->arg_count - 1] = NULL;
 
 		/// TODO: do your own exec with path resolving using execv()
+		
+		// Getting all the paths that may contain executable.
+		char *possibleCommandPaths = getenv("PATH");
+		// Creating a 2D array to store the paths
+		char commandPathArray[maxCommandSize][maxCommandSize];
+		// Creating a string tokenizer to parse through stored paths
+		char *token;
 
+		int pathCount = 0;
+
+		token = strtok(possibleCommandPaths, ":");
+			
+		//Placing the elements in possibleCommandPaths to 2D array
+		while (token != NULL ) {
+			strcpy(commandPathArray[pathCount++], token);
+			token = strtok(NULL, ":");
+		}
+
+		//Searching the paths for executable
+		for(int i = 0; i<pathCount; i++) {
+			strcat(commandPathArray[i], "/");
+			strcat(commandPathArray[i], command->name);
+			if (execv(commandPathArray[i], command->args) != -1) exit(0);
+		}
+
+		// If an executable isn't found, prints error message
+		printf("-%s: %s: command not found\n", sysname, command->name);
 		exit(0);
 	}
 	else
 	{
 		/// TODO: Wait for child to finish if command is not running in background
-
+		if(!command->background) wait(NULL);
 		return SUCCESS;
 	}
 

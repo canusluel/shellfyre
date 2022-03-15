@@ -400,15 +400,18 @@ int process_command(struct command_t *command)
 			
 		//Placing the elements in possibleCommandPaths to 2D array
 		while (token != NULL ) {
-			strcpy(commandPathArray[pathCount++], token);
+			strcpy(commandPathArray[pathCount], token);
 			token = strtok(NULL, ":");
+			pathCount++;
 		}
 
 		//Searching the paths for executable
 		for(int i = 0; i<pathCount; i++) {
 			strcat(commandPathArray[i], "/");
 			strcat(commandPathArray[i], command->name);
-			if (execv(commandPathArray[i], command->args) != -1) exit(0);
+			if (execv(commandPathArray[i], command->args) != -1) {
+			exit(0);
+			}
 		}
 
 		// If an executable isn't found, prints error message

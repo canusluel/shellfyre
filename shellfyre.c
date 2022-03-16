@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define maxCommandSize 1024
 #define maxFolderCharSize 256
@@ -338,6 +340,7 @@ int main()
 		if (code == EXIT)
 			break;
 
+
 		code = process_command(command);
 		if (code == EXIT)
 			break;
@@ -405,6 +408,28 @@ void executeFilesearch(struct command_t *command, char *starterDirectory, char *
 	
 }
 
+
+void executeCdh(){}
+
+void executeTake(struct command_t *command){
+
+char *input = command->args[0];
+char *token;
+token= strtok(input,"/");
+
+while(token != NULL){
+DIR* dir = opendir(token);
+if(ENOENT == errno) {
+mkdir(token, 0777);
+} 
+chdir(token);
+token= strtok(NULL, "/");
+     }
+}
+
+void executeJoker(){}
+
+
 int process_command(struct command_t *command)
 {
 	int r;
@@ -431,12 +456,29 @@ int process_command(struct command_t *command)
 		if(count > 0){
 			executeFilesearch(command, "./", command->args[count-1]);
 		}else{
-			printf("-%s: %s: Insufficient arguements\n", sysname, command->name);
+			printf("-%s: %s: Insufficient arguments\n", sysname, command->name);
 		}
 		return SUCCESS;
 		}
 	
-		
+	if(strcmp(command->name, "cdh") == 0) {
+		if(command->arg_count==0){ executeCdh(); }
+		else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
+		return SUCCESS;
+		}
+
+	if(strcmp(command->name, "take") == 0) {
+		if(command->arg_count==1) { executeTake(command); }
+                else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
+                return SUCCESS;
+                }
+
+        if(strcmp(command->name, "joker") == 0) {
+                if(command->arg_count==1) { executeJoker(); }
+                else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
+                return SUCCESS;
+                }
+
 	pid_t pid = fork();
 
 	if (pid == 0) // child

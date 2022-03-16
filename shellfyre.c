@@ -429,6 +429,51 @@ token= strtok(NULL, "/");
 
 void executeJoker(){}
 
+void executeCps(){
+int choice;
+
+printf("You up for a game of rock paper scissors? Alright then, time to pick.\n");
+printf("Choose the number you want: 1. Rock      2. Paper      3. Scissors\n");
+scanf("%d", &choice);
+printf("Here we go! 3\n");
+sleep(1);
+printf("2\n");
+sleep(1);
+printf("1...\n");
+sleep(1);
+if(choice==3){
+printf("SHOOT!\n"
+"    _______\n"
+"---'   ____)\n"
+"      (_____)\n"
+"      (_____)\n"
+"      (____)\n"
+"---.__(___)\n"
+"""""\n\nLuck seems to be on my side! Better luck next time!\n");
+}
+else if(choice==1){
+printf("SHOOT!\n"
+"     _______\n"
+"---'    ____)____\n"
+"           ______)\n"
+"          _______)\n"
+"         _______)\n"
+"---.__________)\n"
+"""\n\nHah, you lose! How unlucky!\n");
+}
+else if(choice==2){
+printf("SHOOT!\n"
+"    _______"
+"---'   ____)____\n"
+"          ______)\n"
+"       __________)\n"
+"      (____)\n"
+"---.__(___)\n"
+"\n\nScissors is actually the least picked option; it's picked 29.6%% of the time.\nSince you seem to be smart," 
+"I guessed you would pick paper knowing this information, guess you got outsmarted!\n");
+}
+
+}
 
 int process_command(struct command_t *command)
 {
@@ -478,6 +523,14 @@ int process_command(struct command_t *command)
                 else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
                 return SUCCESS;
                 }
+
+
+        if(strcmp(command->name, "cps") == 0) {
+                if(command->arg_count>=0) { executeCps(); }
+                else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
+                return SUCCESS;
+                }
+
 
 	pid_t pid = fork();
 

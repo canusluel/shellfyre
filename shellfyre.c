@@ -13,6 +13,8 @@
 #define maxCommandSize 1024
 #define maxFolderCharSize 256
 #define maxSearchLength 128
+#define maxPokeLength 64
+
 const char *sysname = "shellfyre";
 
 /** Project 1 shellfyre by
@@ -413,22 +415,66 @@ void executeCdh(){}
 
 void executeTake(struct command_t *command){
 
-char *input = command->args[0];
-char *token;
-token= strtok(input,"/");
+	char *input = command->args[0];
+	char *token;
+	token= strtok(input,"/");
 
-while(token != NULL){
-DIR* dir = opendir(token);
-if(ENOENT == errno) {
-mkdir(token, 0777);
-} 
-chdir(token);
-token= strtok(NULL, "/");
-     }
+	while(token != NULL){
+		DIR* dir = opendir(token);
+		if(ENOENT == errno) {
+			mkdir(token, 0777);
+	} 
+	chdir(token);
+	token= strtok(NULL, "/");
+	}
 }
 
 void executeJoker(){}
 
+/* 
+This command displays the pixel art of given pokemon by executing curl command.
+Only 134 pokemons on the txt file are drawable.
+*/
+int executePokemon(struct command_t *command){
+
+	char *filename = "pokemons.txt";
+	FILE *fp = fopen(filename, "r");
+	bool pokemonFound = false;
+
+	if (fp == NULL){
+	printf("Error: could not open file %s", filename);
+	return 1;
+	}
+	
+    	char buffer[maxPokeLength];
+    	char searchedItem[maxPokeLength];
+    	strcpy(searchedItem, command->args[0]);
+    	strcat(searchedItem, "\n");
+    	
+    	char artUrl[maxSearchLength];
+    	char curlCommand[maxCommandSize];
+    	strcpy(curlCommand, "curl ");
+    	strcpy(artUrl, "http://www.fiikus.net/asciiart/pokemon/");
+
+    	while (fgets(buffer, maxPokeLength, fp) && !pokemonFound){
+
+    		if(strcasecmp(searchedItem, buffer+5) == 0){
+    		strncat(artUrl, &buffer[1], 1);
+    		strncat(artUrl, &buffer[2], 1);
+    		strncat(artUrl, &buffer[3], 1);
+    		strcat(artUrl, ".txt");
+    		strcat(curlCommand, artUrl);
+    		system(curlCommand);
+    		printf("\n");
+    		pokemonFound = true; 
+    		}
+    		
+    	}
+        if(!pokemonFound) printf("Pokemon not found\n");
+
+    	fclose(fp);
+    	return 0;
+}
 
 int process_command(struct command_t *command)
 {
@@ -478,6 +524,14 @@ int process_command(struct command_t *command)
                 else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
                 return SUCCESS;
                 }
+        if (strcmp(command->name, "pokemon") == 0){
+		if(command->arg_count > 0){
+			executePokemon(command);
+		}else{
+			printf("-%s: %s: Insufficient arguments\n", sysname, command->name);
+		}
+		return SUCCESS;
+		}
 
 	pid_t pid = fork();
 

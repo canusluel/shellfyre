@@ -476,49 +476,48 @@ int executePokemon(struct command_t *command){
     	return 0;
 }
 
-void executeCps(){
-int choice;
+void executeCps(struct command_t *command){
+	int choice = atoi(command->args[0]);
 
-printf("You up for a game of rock paper scissors? Alright then, time to pick.\n");
-printf("Choose the number you want: 1. Rock      2. Paper      3. Scissors\n");
-scanf("%d", &choice);
-printf("Here we go! 3\n");
-sleep(1);
-printf("2\n");
-sleep(1);
-printf("1...\n");
-sleep(1);
-if(choice==3){
-printf("SHOOT!\n"
-"    _______\n"
-"---'   ____)\n"
-"      (_____)\n"
-"      (_____)\n"
-"      (____)\n"
-"---.__(___)\n"
-"""""\n\nLuck seems to be on my side! Better luck next time!\n");
-}
-else if(choice==1){
-printf("SHOOT!\n"
-"     _______\n"
-"---'    ____)____\n"
-"           ______)\n"
-"          _______)\n"
-"         _______)\n"
-"---.__________)\n"
-"""\n\nHah, you lose! How unlucky!\n");
-}
-else if(choice==2){
-printf("SHOOT!\n"
-"    _______"
-"---'   ____)____\n"
-"          ______)\n"
-"       __________)\n"
-"      (____)\n"
-"---.__(___)\n"
-"\n\nScissors is actually the least picked option; it's picked 29.6%% of the time.\nSince you seem to be smart," 
-"I guessed you would pick paper knowing this information, guess you got outsmarted!\n");
-}
+	printf("You up for a game of rock paper scissors? Alright then, time to pick.\n");
+	printf("Choose the number you want: 1. Rock      2. Paper      3. Scissors\n");
+	printf("Here we go! 3\n");
+	sleep(1);
+	printf("2\n");
+	sleep(1);
+	printf("1...\n");
+	sleep(1);
+	if(choice==3){
+		printf("SHOOT!\n"
+		"    _______\n"
+		"---'   ____)\n"
+		"      (_____)\n"
+		"      (_____)\n"
+		"      (____)\n"
+		"---.__(___)\n"
+		"""""\n\nLuck seems to be on my side! Better luck next time!\n");
+	}
+	else if(choice==1){
+		printf("SHOOT!\n"
+		"     _______\n"
+		"---'    ____)____\n"
+		"           ______)\n"
+		"          _______)\n"
+		"         _______)\n"
+		"---.__________)\n"
+		"""\n\nHah, you lose! How unlucky!\n");
+	}
+	else if(choice==2){
+		printf("SHOOT!\n"
+		"    _______"
+		"---'   ____)____\n"
+		"          ______)\n"
+		"       __________)\n"
+		"      (____)\n"
+		"---.__(___)\n"
+		"\n\nScissors is actually the least picked option; it's picked 29.6%% of the time.\nSince you seem to be smart," 
+		"I guessed you would pick paper knowing this information, guess you got outsmarted!\n");
+	}
 
 }
 
@@ -581,8 +580,12 @@ int process_command(struct command_t *command)
 
 
         if(strcmp(command->name, "cps") == 0) {
-                if(command->arg_count>=0) { executeCps(); }
-                else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
+                if(command->arg_count > 0) {
+                 	executeCps(command); 
+                 }
+                else{ 
+                	printf("-%s: %s: Insufficient arguments\n", sysname, command->name); 
+                }
                 return SUCCESS;
                 }
 
@@ -616,7 +619,6 @@ int process_command(struct command_t *command)
 		int pathCount = 0;
 
 		token = strtok(possibleCommandPaths, ":");
-			
 		//Placing the elements in possibleCommandPaths to 2D array
 		while (token != NULL ) {
 			strcpy(commandPathArray[pathCount], token);

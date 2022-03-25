@@ -9,6 +9,9 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include "my_module_variables.h"
 
 #define maxCommandSize 1024
 #define maxFolderCharSize 256
@@ -16,6 +19,8 @@
 #define maxPokeLength 64
 
 const char *sysname = "shellfyre";
+int modInstalled = 0;
+//int modInstalled = 0;
 
 /** Project 1 shellfyre by
 	Can Usluel (72754) and Halil Doruk Yıldırım (72298)
@@ -440,7 +445,6 @@ int executePokemon(struct command_t *command){
 	char *filename = "pokemons.txt";
 	FILE *fp = fopen(filename, "r");
 	bool pokemonFound = false;
-
 	if (fp == NULL){
 	printf("Error: could not open file %s", filename);
 	return 1;
@@ -471,7 +475,6 @@ int executePokemon(struct command_t *command){
     		
     	}
         if(!pokemonFound) printf("Pokemon not found\n");
-
     	fclose(fp);
     	return 0;
 }
@@ -521,15 +524,69 @@ void executeCps(struct command_t *command){
 
 }
 
+void executePstraverse(struct command_t *command){
+
+	int check;
+	int fd;
+	char *parameters1[] = {"/usr/bin/sudo", "/usr/sbin/insmod", "./my_module.ko", NULL};
+	char *parameters2[] = {"/usr/bin/sudo", "/usr/bin/chmod", "777", "/dev/my_device", NULL};
+
+	//if mod is uninstalled, installs it in the first call
+	if(modInstalled == 0){
+		pid_t pid = fork();
+		if(pid == 0){//child
+			execv(parameters1[0], parameters1);
+			exit(0);
+		}else if(pid > 0){//parent
+			wait(NULL);
+			pid_t pid = fork();
+			
+			if(pid == 0){//child
+			execv(parameters2[0], parameters2);
+			exit(0);
+			}else if(pid > 0){//parent
+				wait(NULL);
+			}
+			
+		}
+		modInstalled = 1;	
+	}
+	fd = open("/dev/my_device", O_RDWR);
+	if(fd < 0){
+	    printf("Failed to open device, errno = %d %s\n",errno,strerror(errno));
+	    exit(-1);
+	}
+	//writing the given PID to the device
+	check = ioctl(fd, WRITE_VAL, &command->args);
+	if (check == -1){
+		printf("Failed to execute ioctl, errno = %d %s\n", errno, strerror(errno));
+		exit(-1);
+	}
+	
+	close(fd);
+}
+
 int process_command(struct command_t *command)
 {
 	int r;
 	if (strcmp(command->name, "") == 0)
 		return SUCCESS;
 
-	if (strcmp(command->name, "exit") == 0)
-		return EXIT;
+	if (strcmp(command->name, "exit") == 0){
+		//if a kernel module is installed before, deletes it before exiting from shell
+		if(modInstalled == 1){
+			char *parameters3[] = {"/usr/bin/sudo", "/usr/sbin/rmmod", "./my_module.ko", NULL};
+			pid_t pid = fork();
+			if(pid == 0){
+				execv(parameters3[0], parameters3);
+				exit(0);
+			}else if(pid > 0){
+			wait(NULL);
+			}
 
+		}
+		return EXIT;
+	}
 	if (strcmp(command->name, "cd") == 0)
 	{
 		if (command->arg_count > 0)
@@ -582,6 +639,16 @@ int process_command(struct command_t *command)
         if(strcmp(command->name, "cps") == 0) {
                 if(command->arg_count > 0) {
                  	executeCps(command); 
+                 }
+                else{ 
+                	printf("-%s: %s: Insufficient arguments\n", sysname, command->name); 
+                }
+                return SUCCESS;
+                }
+                
+        if(strcmp(command->name, "pstraverse") == 0) {
+                if(command->arg_count > 0) {
+                 	executePstraverse(command); 
                  }
                 else{ 
                 	printf("-%s: %s: Insufficient arguments\n", sysname, command->name); 

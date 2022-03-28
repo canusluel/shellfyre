@@ -18,6 +18,8 @@
 #define maxSearchLength 128
 #define maxPokeLength 64
 
+static int victories, defeats, ties=0;
+
 const char *sysname = "shellfyre";
 int modInstalled = 0;
 //int modInstalled = 0;
@@ -479,18 +481,15 @@ int executePokemon(struct command_t *command){
     	return 0;
 }
 
-void executeCps(struct command_t *command){
-	int choice = atoi(command->args[0]);
-
-	printf("You up for a game of rock paper scissors? Alright then, time to pick.\n");
-	printf("Choose the number you want: 1. Rock      2. Paper      3. Scissors\n");
+void executeRps(struct command_t *command){
+	int random = rand() % 3;
 	printf("Here we go! 3\n");
 	sleep(1);
 	printf("2\n");
 	sleep(1);
 	printf("1...\n");
 	sleep(1);
-	if(choice==3){
+	if(random==0){
 		printf("SHOOT!\n"
 		"    _______\n"
 		"---'   ____)\n"
@@ -498,9 +497,20 @@ void executeCps(struct command_t *command){
 		"      (_____)\n"
 		"      (____)\n"
 		"---.__(___)\n"
-		"""""\n\nLuck seems to be on my side! Better luck next time!\n");
+		"\n");
+        if(strcasecmp("rock", command->args[0]) == 0){
+                printf("Rock? We tied.\n");
+                ties++; }
+        else if(strcasecmp("paper", command->args[0]) == 0){
+                printf("Paper? You win...\n");
+                victories++; }
+        else if(strcasecmp("scissors", command->args[0]) == 0){
+                printf("Scissors? Smashed you!\n");
+                defeats++; }
+        else{ printf("You gave an incorrect argument! Try rock, paper or scissors!\n"); }
+        printf("Times you won: %d\nTimes I won: %d\nTies: %d\n", victories, defeats, ties);
 	}
-	else if(choice==1){
+	else if(random==1){
 		printf("SHOOT!\n"
 		"     _______\n"
 		"---'    ____)____\n"
@@ -508,9 +518,20 @@ void executeCps(struct command_t *command){
 		"          _______)\n"
 		"         _______)\n"
 		"---.__________)\n"
-		"""\n\nHah, you lose! How unlucky!\n");
+		"\n");       
+	 if(strcasecmp("rock", command->args[0]) == 0){
+                printf("Rock? I won!\n");
+                defeats++; }
+        else if(strcasecmp("paper", command->args[0]) == 0){
+                printf("Paper? Tied.\n");
+                ties++; }
+        else if(strcasecmp("scissors", command->args[0]) == 0){
+                printf("Scissors? Damn, you won.\n");
+                victories++; }
+        else{ printf("You gave an incorrect argument! Try rock, paper or scissors!\n"); }
+        printf("Times you won: %d\nTimes I won: %d\nTies: %d\n", victories, defeats, ties);
 	}
-	else if(choice==2){
+	else if(random==2){
 		printf("SHOOT!\n"
 		"    _______"
 		"---'   ____)____\n"
@@ -518,8 +539,18 @@ void executeCps(struct command_t *command){
 		"       __________)\n"
 		"      (____)\n"
 		"---.__(___)\n"
-		"\n\nScissors is actually the least picked option; it's picked 29.6%% of the time.\nSince you seem to be smart," 
-		"I guessed you would pick paper knowing this information, guess you got outsmarted!\n");
+		"\n");
+	if(strcasecmp("rock", command->args[0]) == 0){
+		printf("Rock? Dang, you won...\n");
+		victories++; }
+	else if(strcasecmp("paper", command->args[0]) == 0){
+                printf("Paper? Hah, sliced you!\n");
+		defeats++; }
+        else if(strcasecmp("scissors", command->args[0]) == 0){
+                printf("Scissors? Tied.\n");
+		ties++; }
+	else{ printf("You gave an incorrect argument! Try rock, paper or scissors!\n"); }
+	printf("Times you won: %d\nTimes I won: %d\nTies: %d\n", victories, defeats, ties);
 	}
 
 }
@@ -636,9 +667,9 @@ int process_command(struct command_t *command)
 		}
 
 
-        if(strcmp(command->name, "cps") == 0) {
+        if(strcmp(command->name, "rps") == 0) {
                 if(command->arg_count > 0) {
-                 	executeCps(command); 
+                 	executeRps(command); 
                  }
                 else{ 
                 	printf("-%s: %s: Insufficient arguments\n", sysname, command->name); 

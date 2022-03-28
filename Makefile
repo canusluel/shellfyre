@@ -6,8 +6,10 @@ PWD := $(shell pwd)
 
 default:
 	$(MAKE) -C $(KDIR) M=$(shell pwd) modules	
+	gcc shellfyre.c -o shellfyre
 install:
 	$(MAKE) -C $(KDIR) M=$(shell pwd) module_install
 clean: 
 	$(MAKE) -C $(KDIR) M=$(shell pwd) clean
+	rm -rf shellfyre
 

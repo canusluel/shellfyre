@@ -436,6 +436,8 @@ void executeTake(struct command_t *command){
 	}
 }
 
+
+//The notify-send usage with crontab was adapted from stackoverflow, provided by the TA on the discussion board
 void executeJoker(){
 
 FILE *fp;
@@ -493,6 +495,10 @@ int executePokemon(struct command_t *command){
     	return 0;
 }
 
+/*
+This command randomly picks rock paper scissors and plays with the user, then displays the # of wins, losses and ties.
+Takes arguments "rock", "paper" or "scissors", case insensitive.
+*/
 void executeRps(struct command_t *command){
 	int random = rand() % 3;
 	printf("Here we go! 3\n");

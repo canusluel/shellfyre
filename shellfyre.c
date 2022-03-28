@@ -17,12 +17,15 @@
 #define maxFolderCharSize 256
 #define maxSearchLength 128
 #define maxPokeLength 64
+#define pathLen 150
+#define maxHistory 100
+#define BUFFER_SIZE 25
+#define READ_END	0
+#define WRITE_END	1
 
-static int victories, defeats, ties=0;
-
-const char *sysname = "shellfyre";
-int modInstalled = 0;
-//int modInstalled = 0;
+static int victories, defeats, ties=0, recDirOpened = 0, modInstalled = 0;
+static char currentFilePath[pathLen];
+const char *sysname = "shellfyre", *fileName = "/recentDirectories.txt";
 
 /** Project 1 shellfyre by
 	Can Usluel (72754) and Halil Doruk Yıldırım (72298)
@@ -416,9 +419,122 @@ void executeFilesearch(struct command_t *command, char *starterDirectory, char *
 	  }
 	
 }
+void initializeFilePath(){
+	//this function should be called when first cd or take is executed before changing directories
+	//it initializes the path of the file that records of visited directories are kept
+	char currentDirectory[128];
+  	getcwd(currentDirectory, sizeof(currentDirectory));
+	strcpy(currentFilePath, currentDirectory);
+   	strcat(currentFilePath, fileName);
+   	recDirOpened = 1;
+}
+void updateRecentDirectories(){
+	//this function updates the visited directories whenever cd, cdh or take is called
+	//writes it to a txt file
+  	char currentDirectory[128];
+  	
+  	getcwd(currentDirectory, sizeof(currentDirectory));
+   	
+   	FILE *fp = fopen(currentFilePath, "a");
+   	
+	if(fp){
+	//saving current working directory 	
+	fprintf(fp, "%s\n", currentDirectory);
+	
+	}else{
+	
+	printf("Cannot open the file");
+	exit(-1);
+	
+	}
+	
+	fclose(fp);
+	
+}
 
+void executeCdh(){
+	char write_msg[BUFFER_SIZE];
+	char read_msg[BUFFER_SIZE];
+	pid_t pid;
+	int fd[2];
+	char visitHistory[maxHistory][maxFolderCharSize];
+	int size = 0;
+	char buffer[maxFolderCharSize];
+	FILE *fp;
+	
+	//creating pipe to transfer user choice to parrent
+	if (pipe(fd) == -1) {
+		fprintf(stderr,"Pipe failed");
+	}
+	
+	if(recDirOpened == 0){
+	fp = fopen("recentDirectories.txt", "r");
+	initializeFilePath();
+	}else{
+	fp = fopen(currentFilePath, "r");
+	}
 
-void executeCdh(){}
+	if(!fp){
+
+	printf("No history");
+	
+	}else{
+	//traversing visit history and recording them to a 2D array
+	while (fgets(buffer, maxFolderCharSize, fp)){
+		strcpy(visitHistory[size], buffer);
+		size++;
+	}
+	int choice;
+	int index = size - 10;
+	int listNumber = 10;
+	char listLetter = 'j';
+	if(size < 10){
+		index = 0;
+		listNumber = size;
+		listLetter -= 10 - size;
+		
+	}
+	//printing history for user to select
+	for(index; index<size; index++){
+		printf("%c  %d) %s\n", listLetter, listNumber, visitHistory[index]);
+		listNumber--;
+		listLetter--;
+		}
+	
+	//creating a child procces to execute scanf, without a child procces gives segfault	
+	pid = fork();
+	if(pid == 0){//child
+	
+	printf("Select directory by letter or by number: ");
+	scanf("%s", write_msg);
+	
+	close(fd[READ_END]);
+	write(fd[WRITE_END], write_msg, strlen(write_msg)+1); 
+	close(fd[WRITE_END]);
+	fclose(fp);
+	exit(0);
+	
+	}else{//parent
+
+	close(fd[WRITE_END]);
+	read(fd[READ_END], read_msg, BUFFER_SIZE);
+	close(fd[READ_END]);
+	
+	choice = atoi(read_msg);
+	if(choice == 0){
+	
+	choice = (int)read_msg[0] - 96;
+	
+	}
+	//switching to the selected directory
+	visitHistory[size - choice][strlen(visitHistory[size - choice]) - 1] = 0;
+	chdir(visitHistory[size - choice]);
+	updateRecentDirectories();
+	}
+	fclose(fp);
+}
+}
+
 
 void executeTake(struct command_t *command){
 
@@ -433,6 +549,8 @@ void executeTake(struct command_t *command){
 	} 
 	chdir(token);
 	token= strtok(NULL, "/");
+	if(recDirOpened == 0) initializeFilePath();
+	updateRecentDirectories();
 	}
 }
 
@@ -621,8 +739,10 @@ int process_command(struct command_t *command)
 	if (strcmp(command->name, "cd") == 0)
 	{
 		if (command->arg_count > 0)
-		{
+		{	
+			if(recDirOpened == 0) initializeFilePath();
 			r = chdir(command->args[0]);
+			updateRecentDirectories();
 			if (r == -1)
 				printf("-%s: %s: %s\n", sysname, command->name, strerror(errno));
 			return SUCCESS;

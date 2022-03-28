@@ -436,7 +436,19 @@ void executeTake(struct command_t *command){
 	}
 }
 
-void executeJoker(){}
+void executeJoker(){
+
+FILE *fp;
+
+fp= fopen("cron.txt","w");
+fprintf(fp, " */15 * * * *  XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send -i face-laugh \"$(curl -s https://icanhazdadjoke.com/)\" \n" );
+fclose(fp);
+
+char command[200];
+strcpy(command, "crontab cron.txt");
+system(command);
+
+}
 
 /* 
 This command displays the pixel art of given pokemon by executing curl command.
@@ -653,7 +665,7 @@ int process_command(struct command_t *command)
                 }
 
         if(strcmp(command->name, "joker") == 0) {
-                if(command->arg_count==1) { executeJoker(); }
+                if(command->arg_count==0) { executeJoker(); }
                 else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
                 return SUCCESS;
                 }

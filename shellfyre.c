@@ -12,6 +12,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include "my_module_variables.h"
+#include <time.h>
 
 #define maxCommandSize 1024
 #define maxFolderCharSize 256
@@ -343,6 +344,7 @@ int process_command(struct command_t *command);
 
 int main()
 {
+	srand(time(0));
 	while (1)
 	{
 		struct command_t *command = malloc(sizeof(struct command_t));
@@ -688,7 +690,7 @@ void executeRps(struct command_t *command){
 	}
 	else if(random==2){
 		printf("SHOOT!\n"
-				"    _______"
+				"    _______	\n"
 				"---'   ____)____\n"
 				"          ______)\n"
 				"       __________)\n"

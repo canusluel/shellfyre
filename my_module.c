@@ -47,9 +47,10 @@ void breadthFirstSearch(struct task_struct *task)
 	struct task_struct *child, *grandChild, *currentTask = task;
 	struct list_head *list, *grandChildList;
 	int i, j, frontDummy = -1;
-
+	printk(KERN_INFO"PID: %d, Procces name: %s\n", task->pid, task->comm);
 	while(frontDummy != rear){
-
+		//after initial call, don't add children
+		if(frontDummy == -1){
 		list_for_each(list, &currentTask->children) {
 			//if rear pointer reaches maximum, sets it to beginning of array
 			if(rear + 1 == maxQueue) rear = 0;
@@ -58,8 +59,8 @@ void breadthFirstSearch(struct task_struct *task)
 			bfsQueue[rear] = child;
 			rear++;
 		}
+		}
 		j = rear;
-
 		for(i = front; i<j; i++){
 			//if front pointer reaches maximum, sets it to beginning of array
 			if(front + 1 == maxQueue) front = 0;
@@ -75,7 +76,7 @@ void breadthFirstSearch(struct task_struct *task)
 			}
 			front++;
 		}
-		currentTask = bfsQueue[front - 1];
+		currentTask = bfsQueue[front];
 		frontDummy = front;
 	}
 }

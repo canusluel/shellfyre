@@ -24,6 +24,7 @@
 #define WRITE_END	1
 
 static int victories, defeats, ties=0, recDirOpened = 0, modInstalled = 0;
+bool isJoker = false;
 static char currentFilePath[pathLen];
 const char *sysname = "shellfyre", *fileName = "/recentDirectories.txt";
 
@@ -566,19 +567,26 @@ void executeTake(struct command_t *command){
 }
 
 
-//The notify-send usage with crontab was adapted from stackoverflow, provided by the TA on the discussion board
-void executeJoker(){
-
+/*
+  The notify-send usage with crontab was adapted from stackoverflow, provided by the TA on the discussion board.
+  Disables joker given the -r option.
+  */
+void executeJoker(struct command_t *command){
+	char com[40];
+	if(command->args[0] != NULL){
+	if(strcmp(command->args[0], "-r")==0){
+		strcpy(com, "crontab -r");
+		system(com);
+		isJoker=false;}
+	}else if(command->arg_count==0){
 	FILE *fp;
-
 	fp= fopen("cron.txt","w");
 	fprintf(fp, " */15 * * * *  XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send -i face-laugh \"$(curl -s https://icanhazdadjoke.com/)\" \n" );
 	fclose(fp);
-
-	char command[200];
-	strcpy(command, "crontab cron.txt");
-	system(command);
-
+	strcpy(com, "crontab cron.txt");
+	system(com);
+	isJoker=true;
+	}else{printf("Insufficient arguments");}
 }
 
 /* 
@@ -763,6 +771,11 @@ int process_command(struct command_t *command)
 			}
 
 		}
+		if(isJoker){
+                	char com[40];
+                	strcpy(com, "crontab -r");
+               		system(com);
+			isJoker=false;}
 		return EXIT;
 	}
 	if (strcmp(command->name, "cd") == 0)
@@ -802,7 +815,7 @@ int process_command(struct command_t *command)
 	}
 
 	if(strcmp(command->name, "joker") == 0) {
-		if(command->arg_count==0) { executeJoker(); }
+		if(command->arg_count==1 || command->arg_count==0) { executeJoker(command); }
 		else{ printf("-%s: %s: Insufficient arguments\n", sysname, command->name); }
 		return SUCCESS;
 	}
